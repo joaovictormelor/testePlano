@@ -141,6 +141,13 @@
         .btn-primary:hover {
             background-color: #2D3748; /* Darker on hover */
         }
+        .form-field small { /* Style for instruction text */
+            display: block;
+            font-size: 0.75rem;
+            color: #718096;
+            margin-top: 0.25rem;
+        }
+
         /* For printing: ensure content is not cut off and styles are minimal */
         @media print {
             body {
@@ -186,7 +193,7 @@
              .header-logos .title-text h1 {
                 font-size: 12pt;
             }
-            .header-logos .title-text p {
+             .header-logos .title-text p {
                 font-size: 8pt;
             }
             .grid-cols-form { /* Ensure grid works well for print */
@@ -196,6 +203,7 @@
             .form-section-title, .form-field, .checkbox-group-label, .checkbox-item {
                 page-break-inside: avoid;
             }
+            .form-field small { display: none; } /* Hide instruction text in print */
         }
     </style>
 </head>
@@ -546,7 +554,56 @@
             </div>
         </section>
 
+        <section>
+            <h2 class="form-section-title">8. OBJETIVO</h2>
+            <div class="form-field">
+                <textarea id="objetivo_projeto" name="objetivo_projeto" rows="4" placeholder="Descrever, resumidamente, o(s) objetivo(s) do projeto e metas a serem alcançadas, indicando os órgãos internos e/ou externos envolvidos; relação com outros projetos etc."></textarea>
+            </div>
+        </section>
 
+        <section>
+            <h2 class="form-section-title">9. JUSTIFICATIVA DO PROJETO</h2>
+            <div class="form-field">
+                <textarea id="justificativa_projeto" name="justificativa_projeto" rows="4" placeholder="Justificar a realização do Projeto, sua relevância acadêmica, a abrangência e benefícios de seus resultados (quantificando-os, se possível) para a UFT e/ou comunidade etc."></textarea>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="form-section-title">10. CARACTERIZAÇÃO DOS INTERESSES RECÍPROCOS</h2>
+            <div class="form-field">
+                <textarea id="interesses_reciprocos" name="interesses_reciprocos" rows="4" placeholder="Descreva a caracterização dos interesses recíprocos."></textarea>
+                <small>Preencher para Convênios Siconv.</small>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="form-section-title">11. RELAÇÃO ENTRE A PROPOSTA E OS OBJETIVOS E DIRETRIZES DO PROGRAMA</h2>
+            <div class="form-field">
+                <textarea id="relacao_proposta_objetivos" name="relacao_proposta_objetivos" rows="4" placeholder="Descreva a relação entre a proposta e os objetivos e diretrizes do programa."></textarea>
+                <small>Preencher para Convênios Siconv.</small>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="form-section-title">12. PÚBLICO ALVO</h2>
+            <div class="form-field">
+                <textarea id="publico_alvo" name="publico_alvo" rows="3" placeholder="Descreva o público alvo do projeto."></textarea>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="form-section-title">13. PROBLEMA A SER RESOLVIDO</h2>
+            <div class="form-field">
+                <textarea id="problema_resolver" name="problema_resolver" rows="4" placeholder="Descreva o problema a ser resolvido pelo projeto."></textarea>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="form-section-title">14. RESULTADOS ESPERADOS</h2>
+            <div class="form-field">
+                <textarea id="resultados_esperados" name="resultados_esperados" rows="4" placeholder="Descrever sucintamente os resultados esperados."></textarea>
+            </div>
+        </section>
         <div class="text-center mt-8">
             <button id="gerarPdfBtn" class="btn-primary">Gerar PDF</button>
         </div>
@@ -566,15 +623,35 @@
                 let anos = dataTermino.getFullYear() - dataInicio.getFullYear();
                 let meses = dataTermino.getMonth() - dataInicio.getMonth();
                 
+                // Ajuste para incluir o mês de término completamente
+                // Se o dia de término for maior ou igual ao dia de início, OU se o mês de término for diferente do mês de início
+                // E o dia de término não for o último dia do mês (para evitar contar um mês a mais indevidamente em alguns casos)
+                // Ou se for um período dentro do mesmo mês.
+
                 let totalMeses = anos * 12 + meses;
 
-                if (dataTermino.getDate() >= dataInicio.getDate()) {
-                    totalMeses +=1; 
+                // Se a data de término for no mesmo mês ou em mês posterior, e o dia de término for igual ou superior ao dia de início,
+                // ou se os meses forem diferentes, adiciona 1 para incluir o mês corrente.
+                // Esta lógica tenta ser inclusiva para o mês de término.
+                if (dataTermino > dataInicio) { // Garante que não é o mesmo dia exato ou data de término anterior
+                    if (dataTermino.getMonth() !== dataInicio.getMonth() || dataTermino.getFullYear() !== dataInicio.getFullYear() || dataTermino.getDate() >= dataInicio.getDate()){
+                         totalMeses +=1;
+                    }
+                } else if (dataTermino.getTime() === dataInicio.getTime()){ // Mesmo dia
+                    totalMeses = 1; // Considera 1 mês se for o mesmo dia
                 }
-                
-                if (totalMeses < 0) totalMeses = 0; 
 
-                totalMesesInput.value = totalMeses;
+
+                if (totalMeses < 0) totalMeses = 0; 
+                // Se a data de início for posterior à data de término, o cálculo pode dar negativo ou zero.
+                // A condição dataTermino >= dataInicio já deveria tratar isso, mas é uma salvaguarda.
+                // Se dataTermino for anterior a dataInicio, o campo deve ficar vazio ou mostrar 0.
+                if (dataTermino < dataInicio) {
+                    totalMeses = 0;
+                }
+
+
+                totalMesesInput.value = totalMeses > 0 ? totalMeses : '';
 
             } else {
                 totalMesesInput.value = ''; 
@@ -593,12 +670,24 @@
                 useCORS: true,
                 logging: true,
                 onclone: (documentClone) => {
+                    // Esconder o botão e o logo INOVATO no clone
+                    const clonedButton = documentClone.getElementById('gerarPdfBtn');
+                    if (clonedButton) clonedButton.style.display = 'none';
+                    
+                    const clonedInovatoLogo = documentClone.querySelector('header img:last-child');
+                    if(clonedInovatoLogo) clonedInovatoLogo.style.display = 'none';
+
+                    // Ajustar tamanho do logo UFT no clone para impressão
+                    const clonedUFTLogo = documentClone.querySelector('header img:first-child');
+                    if (clonedUFTLogo) clonedUFTLogo.style.maxHeight = '40px';
+
+
                     const clonedInputs = documentClone.querySelectorAll('input, textarea, select');
                     clonedInputs.forEach(clonedInput => {
                         const originalInput = document.getElementById(clonedInput.id);
                         if (originalInput) {
                             if (clonedInput.type === 'date' && originalInput.value) {
-                                const dateValue = new Date(originalInput.value);
+                                const dateValue = new Date(originalInput.value + "T00:00:00"); // Adiciona T00:00:00 para evitar problemas de fuso horário
                                 const day = String(dateValue.getUTCDate()).padStart(2, '0');
                                 const month = String(dateValue.getUTCMonth() + 1).padStart(2, '0');
                                 const year = dateValue.getUTCFullYear();
@@ -606,63 +695,99 @@
                             } else if (clonedInput.type === 'checkbox') {
                                 const label = documentClone.querySelector(`label[for="${clonedInput.id}"]`);
                                 let labelText = label ? label.textContent : '';
-                                // For "Outro" checkbox, we handle its text area separately
-                                if (clonedInput.id === 'just_outro') {
-                                   labelText = 'Outro: '; // Keep it short, the text area content will follow
+                                if (clonedInput.id === 'just_outro') { // Checkbox "Outro"
+                                    labelText = 'Outro: '; 
                                 }
-                                clonedInput.outerHTML = `<span class="pdf-value-span">[${originalInput.checked ? 'X' : ' '}] ${labelText}</span>`;
+                                // Para o PDF, não vamos esconder o checkbox, mas sim mostrar seu estado
+                                // A regra CSS @media print já esconde o input[type="checkbox"]
+                                // Aqui, garantimos que o texto do label seja preservado e o estado indicado
+                                const checkSpan = document.createElement('span');
+                                checkSpan.className = 'pdf-value-span pdf-checkbox-span'; // Adiciona classe específica
+                                checkSpan.innerHTML = `[${originalInput.checked ? 'X' : ' '}] ${labelText}`;
+                                clonedInput.parentNode.replaceChild(checkSpan, clonedInput);
+
                             } else if (clonedInput.id === 'just_outro_texto' && originalInput.value) {
-                                // Special handling for the "Outro" textarea to be displayed clearly
                                 const valueSpan = document.createElement('span');
-                                valueSpan.className = 'pdf-value-span';
-                                valueSpan.style.display = 'block'; // Ensure it takes its own line if needed
-                                valueSpan.style.paddingLeft = '20px'; // Indent to align with "Outro:"
+                                valueSpan.className = 'pdf-value-span pdf-textarea-span'; // Adiciona classe específica
+                                valueSpan.style.display = 'block'; 
+                                valueSpan.style.paddingLeft = '20px'; 
                                 valueSpan.innerHTML = `Fundamentação: ${originalInput.value.replace(/\n/g, '<br>')}`;
                                 clonedInput.parentNode.replaceChild(valueSpan, clonedInput);
                             } else if (clonedInput.tagName === 'INPUT' || clonedInput.tagName === 'TEXTAREA') {
                                 const valueSpan = document.createElement('span');
-                                valueSpan.className = 'pdf-value-span';
+                                valueSpan.className = 'pdf-value-span ' + (clonedInput.tagName === 'TEXTAREA' ? 'pdf-textarea-span' : 'pdf-input-span');
                                 if (clonedInput.tagName === 'TEXTAREA' && originalInput.value) {
                                      valueSpan.innerHTML = originalInput.value.replace(/\n/g, '<br>');
                                 } else {
                                      valueSpan.textContent = originalInput.value || '';
+                                }
+                                // Se o campo estiver vazio e for readonly, manter o placeholder visual
+                                if (!originalInput.value && originalInput.readOnly && originalInput.placeholder) {
+                                    valueSpan.textContent = originalInput.placeholder;
+                                    valueSpan.style.color = '#718096'; // Cor do placeholder
+                                } else if (!originalInput.value && !originalInput.readOnly) {
+                                     valueSpan.innerHTML = '&nbsp;'; // Adiciona um espaço para manter a altura do campo
                                 }
                                 clonedInput.parentNode.replaceChild(valueSpan, clonedInput);
                             }
                         }
                     });
                     
-                    // Add base styles for pdf-value-span elements in the cloned document
+                    // Esconder as instruções (tags <small>) no clone
+                    const clonedSmallInstructions = documentClone.querySelectorAll('.form-field small');
+                    clonedSmallInstructions.forEach(small => small.style.display = 'none');
+
                     const style = documentClone.createElement('style');
                     style.innerHTML = `
                         .pdf-value-span {
-                            font-size: 0.875rem;
-                            padding: 0.5rem 0.75rem;
-                            border: 1px solid #CBD5E0;
-                            display: block;
-                            width: 100%;
-                            border-radius: 0.25rem;
-                            box-sizing: border-box; /* Ensure padding and border are included in width */
-                            min-height: 2.25rem; /* Approximate height of an input field */
-                            line-height: 1.25rem;
-                            white-space: pre-wrap;
-                            word-break: break-word;
-                            background-color: #fff; /* Ensure background is white */
+                            font-size: 9pt !important; /* Tamanho da fonte para o PDF */
+                            padding: 0.3rem 0.5rem !important; /* Padding para o PDF */
+                            border: 1px solid #ccc !important; /* Borda para o PDF */
+                            display: block !important;
+                            width: 100% !important;
+                            border-radius: 0.15rem !important; /* Bordas levemente arredondadas */
+                            box-sizing: border-box !important;
+                            min-height: 1.8rem !important; /* Altura mínima aproximada de um campo */
+                            line-height: 1.2 !important;
+                            white-space: pre-wrap !important;
+                            word-break: break-word !important;
+                            background-color: #fff !important;
+                            margin-bottom: 0.5rem !important; /* Espaçamento entre os spans */
                         }
-                        /* Specific styling for checkbox representation */
-                        span[class*="pdf-value-span"][id^="just_"] {
-                            border: none; /* Remove border for checkbox lines */
-                            padding: 0.25rem 0;
-                            min-height: auto;
+                        .pdf-checkbox-span { /* Estilo específico para linhas de checkbox */
+                            border: none !important;
+                            padding: 0.1rem 0 !important;
+                            min-height: auto !important;
+                            margin-bottom: 0.25rem !important;
                         }
+                        .pdf-textarea-span { /* Textareas podem precisar de mais altura */
+                           /* min-height: 3rem !important; */ /* Ajuste conforme necessário */
+                        }
+                        /* Ajustes finos para títulos de seção no PDF */
+                        .form-section-title {
+                            font-size: 10pt !important;
+                            padding: 0.3rem 0.6rem !important;
+                            margin-top: 1rem !important;
+                            margin-bottom: 0.5rem !important;
+                        }
+                        /* Ajustes para o cabeçalho no PDF */
+                        .header-logos .title-text h1 { font-size: 12pt !important; }
+                        .header-logos .title-text p { font-size: 8pt !important; }
+                        .header-logos { padding-bottom: 0.5rem !important; margin-bottom: 1rem !important; }
+
+                         /* Estilo para a declaração de ciência */
+                        .form-field p.text-sm {
+                            font-size: 9pt !important;
+                            padding: 0.5rem !important;
+                            border: 1px solid #ccc !important;
+                        }
+                        /* Estilo para local/data e assinatura */
+                        .form-field label.form-field.label { font-size: 9pt !important; }
+                        .mt-6.border-t.pt-4 { margin-top: 1rem !important; padding-top: 0.5rem !important; }
+                        .w-full.h-16.border-b { height: 2rem !important; margin-top: 0.2rem !important; }
+                        p.text-xs.text-center { font-size: 7pt !important; }
                     `;
                     documentClone.head.appendChild(style);
-
-
-                    const clonedButton = documentClone.getElementById('gerarPdfBtn');
-                    if (clonedButton) clonedButton.style.display = 'none';
-                    const clonedInovatoLogo = documentClone.querySelector('header img:last-child');
-                    if(clonedInovatoLogo) clonedInovatoLogo.style.display = 'none';
                 }
             }).then(canvas => {
                 const imgData = canvas.toDataURL('image/png');
@@ -681,59 +806,58 @@
                 const canvasHeight = canvas.height;
                 const ratio = canvasWidth / canvasHeight;
                 
-                let imgWidth = contentWidth;
-                let imgHeight = imgWidth / ratio;
-                let currentPosition = margin;
+                let imgActualWidth = contentWidth;
+                let imgActualHeight = imgActualWidth / ratio;
+                
+                let totalPdfPages = Math.ceil(imgActualHeight / (pdfHeight - 2 * margin));
+                if (totalPdfPages === 0) totalPdfPages = 1;
 
-                if (imgHeight <= (pdfHeight - (2*margin))) { // If fits on one page
-                    pdf.addImage(imgData, 'PNG', margin, currentPosition, imgWidth, imgHeight);
-                } else { // If content is taller than one page
-                    let remainingCanvasHeight = canvasHeight;
-                    let yCanvas = 0;
+                let currentCanvasY = 0;
+                const pageContentHeightInCanvasPx = ((pdfHeight - 2 * margin) / imgActualHeight) * canvasHeight;
 
-                    while (remainingCanvasHeight > 0) {
-                        const pageMaxContentHeight = (pdfHeight - (2 * margin)) * (canvas.width / imgWidth); // Max content height on PDF page in canvas pixels
-                        const pageImageHeightOnCanvas = Math.min(remainingCanvasHeight, pageMaxContentHeight);
-                        
-                        const tempCanvas = document.createElement('canvas');
-                        tempCanvas.width = canvasWidth;
-                        tempCanvas.height = pageImageHeightOnCanvas;
-                        const tempCtx = tempCanvas.getContext('2d');
-                        tempCtx.drawImage(canvas, 0, yCanvas, canvasWidth, pageImageHeightOnCanvas, 0, 0, canvasWidth, pageImageHeightOnCanvas);
-                        
-                        const pageImgData = tempCanvas.toDataURL('image/png');
-                        const pageImgDisplayHeight = (pageImageHeightOnCanvas / canvasWidth) * imgWidth;
 
-                        pdf.addImage(pageImgData, 'PNG', margin, currentPosition, imgWidth, pageImgDisplayHeight);
-                        
-                        remainingCanvasHeight -= pageImageHeightOnCanvas;
-                        yCanvas += pageImageHeightOnCanvas;
+                for (let i = 0; i < totalPdfPages; i++) {
+                    const sourceHeight = Math.min(pageContentHeightInCanvasPx, canvasHeight - currentCanvasY);
+                    
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = canvasWidth;
+                    tempCanvas.height = sourceHeight;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    
+                    tempCtx.drawImage(canvas, 0, currentCanvasY, canvasWidth, sourceHeight, 0, 0, canvasWidth, sourceHeight);
+                    
+                    const pageImgData = tempCanvas.toDataURL('image/png');
+                    const pageImgDisplayHeight = (sourceHeight / canvasWidth) * imgActualWidth;
 
-                        if (remainingCanvasHeight > 0) {
-                            pdf.addPage();
-                            currentPosition = margin; // Reset position for new page
-                        }
+                    if (i > 0) {
+                        pdf.addPage();
                     }
+                    pdf.addImage(pageImgData, 'PNG', margin, margin, imgActualWidth, pageImgDisplayHeight);
+                    currentCanvasY += sourceHeight;
                 }
+                
                 pdf.save('plano_de_trabalho.pdf');
             }).catch(error => {
                 console.error("Erro ao gerar PDF:", error);
-                // Avoid using alert()
                 const errorDiv = document.createElement('div');
                 errorDiv.style.position = 'fixed';
                 errorDiv.style.top = '10px';
                 errorDiv.style.left = '50%';
                 errorDiv.style.transform = 'translateX(-50%)';
-                errorDiv.style.backgroundColor = 'red';
+                errorDiv.style.backgroundColor = 'rgb(220, 38, 38)'; // Tailwind red-600
                 errorDiv.style.color = 'white';
-                errorDiv.style.padding = '10px';
-                errorDiv.style.borderRadius = '5px';
+                errorDiv.style.padding = '10px 15px';
+                errorDiv.style.borderRadius = '0.375rem'; // Tailwind rounded-md
+                errorDiv.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'; // Tailwind shadow-lg
                 errorDiv.style.zIndex = '1000';
-                errorDiv.textContent = "Erro ao gerar PDF: " + error.message;
+                errorDiv.style.fontSize = '0.875rem'; // Tailwind text-sm
+                errorDiv.textContent = "Erro ao gerar PDF: " + error.message + ". Verifique o console para mais detalhes.";
                 document.body.appendChild(errorDiv);
                 setTimeout(() => {
-                    document.body.removeChild(errorDiv);
-                }, 5000);
+                    if (document.body.contains(errorDiv)) {
+                         document.body.removeChild(errorDiv);
+                    }
+                }, 7000);
             });
         });
     </script>
