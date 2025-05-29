@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plano de Trabalho</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background for the page */
+        }
+        .form-container {
+            max-width: 900px; /* Max width of the form */
+            margin: 2rem auto; /* Centering the form */
+            padding: 2rem; /* Padding around the form */
+            background-color: white; /* White background for the form itself */
+            border-radius: 0.5rem; /* Rounded corners for the form container */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        }
+        .form-section-title {
+            background-color: #4A5568; /* Darker gray for section titles */
+            color: white;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            border-radius: 0.25rem;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .form-field {
+            margin-bottom: 0.75rem; /* Space below each field */
+        }
+        .form-field label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem; /* Slightly smaller label text */
+            color: #2D3748; /* Dark gray for labels */
+        }
+        .form-field input[type="text"],
+        .form-field input[type="email"],
+        .form-field input[type="tel"],
+        .form-field input[type="date"],
+        .form-field input[type="number"],
+        .form-field textarea {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #CBD5E0; /* Light gray border */
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            transition: border-color 0.2s;
+        }
+        .form-field input[type="text"]:focus,
+        .form-field input[type="email"]:focus,
+        .form-field input[type="tel"]:focus,
+        .form-field input[type="date"]:focus,
+        .form-field input[type="number"]:focus,
+        .form-field textarea:focus {
+            outline: none;
+            border-color: #4299E1; /* Blue border on focus */
+            box-shadow: 0 0 0 1px #4299E1;
+        }
+        .form-field input[readonly] {
+            background-color: #F7FAFC; /* Lighter background for readonly fields */
+            color: #718096; /* Grayer text for readonly */
+        }
+        .grid-cols-form {
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr)); /* Default to 1 column */
+            gap: 1rem;
+        }
+        /* Responsive grid columns */
+        @media (min-width: 640px) { /* sm */
+            .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .sm\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .sm\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        }
+        @media (min-width: 768px) { /* md */
+            .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .md\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        }
+        .header-logos {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #E2E8F0; /* Separator line */
+        }
+        .header-logos img {
+            max-height: 60px; /* Control logo size */
+        }
+        .header-logos .title-text {
+            text-align: center;
+            flex-grow: 1;
+        }
+        .header-logos .title-text h1 {
+            font-size: 1.5rem; /* Larger main title */
+            font-weight: 700;
+            color: #2D3748;
+            margin-bottom: 0.25rem;
+        }
+        .header-logos .title-text p {
+            font-size: 0.875rem;
+            color: #4A5568;
+        }
+        .btn-primary {
+            background-color: #4A5568; /* Dark gray button */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: none;
+            display: inline-block; /* Allows margin auto for centering if needed */
+            margin-top: 1.5rem;
+        }
+        .btn-primary:hover {
+            background-color: #2D3748; /* Darker on hover */
+        }
+        /* For printing: ensure content is not cut off and styles are minimal */
+        @media print {
+            body {
+                background-color: white;
+                margin: 0;
+                padding: 0;
+                font-size: 10pt; /* Smaller font for print */
+            }
+            .form-container {
+                max-width: 100%;
+                margin: 0;
+                padding: 1cm; /* Margins for printing */
+                box-shadow: none;
+                border-radius: 0;
+                border: 1px solid #ccc; /* Add a border for print if desired */
+            }
+            .form-section-title {
+                background-color: #E2E8F0 !important; /* Lighter gray for print, ensure it overrides */
+                color: black !important;
+                -webkit-print-color-adjust: exact; /* Ensures background colors print in Chrome/Safari */
+                print-color-adjust: exact; /* Standard */
+                border: 1px solid #ccc;
+            }
+            .form-field input[type="text"],
+            .form-field input[type="email"],
+            .form-field input[type="tel"],
+            .form-field input[type="date"],
+            .form-field input[type="number"],
+            .form-field textarea {
+                border: 1px solid #ccc !important; /* Ensure borders are visible */
+                font-size: 9pt;
+            }
+            .btn-primary, .header-logos img:last-child /* Hide INOVATO logo and button for printing */ {
+                display: none !important;
+            }
+            .header-logos img:first-child { /* UFT logo */
+                 max-height: 40px;
+            }
+             .header-logos .title-text h1 {
+                font-size: 12pt;
+            }
+            .header-logos .title-text p {
+                font-size: 8pt;
+            }
+            .grid-cols-form { /* Ensure grid works well for print */
+                display: grid !important; /* Override Tailwind's print utilities if needed */
+            }
+            /* Try to keep elements on the same page */
+            .form-section-title, .form-field {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container" id="planoTrabalho">
+        <header class="header-logos">
+            <img src="https://placehold.co/150x60/E2E8F0/4A5568?text=UFT+Logo" alt="Logo UFT"
+                 onerror="this.onerror=null;this.src='https://placehold.co/150x60/E2E8F0/4A5568?text=Logo+UFT';">
+            <div class="title-text">
+                <p class="font-semibold">AGÊNCIA DE INOVAÇÃO E TRANSFERÊNCIA DE TECNOLOGIA - INOVATO / UFT</p>
+                <h1>PLANO DE TRABALHO</h1>
+            </div>
+            <img src="https://placehold.co/100x60/E2E8F0/4A5568?text=INOVATO" alt="Logo INOVATO"
+                 onerror="this.onerror=null;this.src='https://placehold.co/100x60/E2E8F0/4A5568?text=INOVATO';">
+        </header>
+
+        <section>
+            <h2 class="form-section-title">1. DADOS UFT</h2>
+            <div class="grid-cols-form md:grid-cols-2">
+                <div class="form-field">
+                    <label for="uft_instituicao">INSTITUIÇÃO:</label>
+                    <input type="text" id="uft_instituicao" name="uft_instituicao" value="Universidade Federal do Tocantins - UFT" readonly>
+                </div>
+                <div class="form-field">
+                    <label for="uft_cnpj">CNPJ/MF:</label>
+                    <input type="text" id="uft_cnpj" name="uft_cnpj" value="05.149.726/0001-04" readonly>
+                </div>
+                <div class="form-field md:col-span-2">
+                    <label for="uft_endereco">ENDEREÇO:</label>
+                    <input type="text" id="uft_endereco" name="uft_endereco" value="AV. NS 15, ALC NO 14, BLOCO IV" readonly>
+                </div>
+                <div class="form-field">
+                    <label for="uft_ea">EA:</label>
+                    <input type="text" id="uft_ea" name="uft_ea" value="FEDERAL" readonly>
+                </div>
+                 <div class="form-field">
+                    <label for="uft_cidade">CIDADE:</label>
+                    <input type="text" id="uft_cidade" name="uft_cidade" value="Palmas" readonly>
+                </div>
+                <div class="form-field">
+                    <label for="uft_cep">CEP:</label>
+                    <input type="text" id="uft_cep" name="uft_cep" value="77010-970" readonly>
+                </div>
+                <div class="form-field">
+                    <label for="uft_telefone">DDD/TELEFONE:</label>
+                    <input type="text" id="uft_telefone" name="uft_telefone" value="(63) 32328109" readonly>
+                </div>
+                <div class="form-field md:col-span-2">
+                    <label for="uft_responsavel">NOME RESPONSÁVEL:</label>
+                    <input type="text" id="uft_responsavel" name="uft_responsavel" value="Luis Eduardo Bovolato" readonly>
+                </div>
+                <div class="form-field">
+                    <label for="uft_cargo_resp">CARGO:</label>
+                    <input type="text" id="uft_cargo_resp" name="uft_cargo_resp" value="Professor" readonly>
+                </div>
+                <div class="form-field">
+                    <label for="uft_funcao_resp">FUNÇÃO:</label>
+                    <input type="text" id="uft_funcao_resp" name="uft_funcao_resp" value="Reitor" readonly>
+                </div>
+                 <div class="form-field">
+                    <label for="uft_matricula_resp">MATRÍCULA:</label>
+                    <input type="text" id="uft_matricula_resp" name="uft_matricula_resp" value="1413294" readonly>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="form-section-title">1.2 DADOS PARCEIRO INTERINSTITUCIONAL</h2>
+            <div class="grid-cols-form md:grid-cols-2">
+                <div class="form-field">
+                    <label for="p1_instituicao">INSTITUIÇÃO:</label>
+                    <input type="text" id="p1_instituicao" name="p1_instituicao">
+                </div>
+                <div class="form-field">
+                    <label for="p1_cnpj">CNPJ/MF:</label>
+                    <input type="text" id="p1_cnpj" name="p1_cnpj">
+                </div>
+                <div class="form-field md:col-span-2">
+                    <label for="p1_endereco">ENDEREÇO:</label>
+                    <input type="text" id="p1_endereco" name="p1_endereco">
+                </div>
+                <div class="form-field">
+                    <label for="p1_ea">EA:</label>
+                    <input type="text" id="p1_ea" name="p1_ea">
+                </div>
+                 <div class="form-field">
+                    <label for="p1_cidade">CIDADE:</label>
+                    <input type="text" id="p1_cidade" name="p1_cidade">
+                </div>
+                <div class="form-field">
+                    <label for="p1_cep">CEP:</label>
+                    <input type="text" id="p1_cep" name="p1_cep">
+                </div>
+                <div class="form-field">
+                    <label for="p1_telefone">DDD/TELEFONE:</label>
+                    <input type="text" id="p1_telefone" name="p1_telefone">
+                </div>
+                <div class="form-field md:col-span-2">
+                    <label for="p1_responsavel">NOME RESPONSÁVEL:</label>
+                    <input type="text" id="p1_responsavel" name="p1_responsavel">
+                </div>
+                <div class="form-field">
+                    <label for="p1_cargo_resp">CARGO:</label>
+                    <input type="text" id="p1_cargo_resp" name="p1_cargo_resp">
+                </div>
+                <div class="form-field">
+                    <label for="p1_funcao_resp">FUNÇÃO:</label>
+                    <input type="text" id="p1_funcao_resp" name="p1_funcao_resp">
+                </div>
+                 <div class="form-field">
+                    <label for="p1_matricula_resp">MATRÍCULA:</label>
+                    <input type="text" id="p1_matricula_resp" name="p1_matricula_resp">
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="form-section-title">1.3 DADOS PARCEIRO INTERINSTITUCIONAL</h2>
+             <div class="grid-cols-form md:grid-cols-2">
+                <div class="form-field">
+                    <label for="p2_instituicao">INSTITUIÇÃO:</label>
+                    <input type="text" id="p2_instituicao" name="p2_instituicao">
+                </div>
+                <div class="form-field">
+                    <label for="p2_cnpj">CNPJ/MF:</label>
+                    <input type="text" id="p2_cnpj" name="p2_cnpj">
+                </div>
+                <div class="form-field md:col-span-2">
+                    <label for="p2_endereco">ENDEREÇO:</label>
+                    <input type="text" id="p2_endereco" name="p2_endereco">
+                </div>
+                <div class="form-field">
+                    <label for="p2_ea">EA:</label>
+                    <input type="text" id="p2_ea" name="p2_ea">
+                </div>
+                 <div class="form-field">
+                    <label for="p2_cidade">CIDADE:</label>
+                    <input type="text" id="p2_cidade" name="p2_cidade">
+                </div>
+                <div class="form-field">
+                    <label for="p2_cep">CEP:</label>
+                    <input type="text" id="p2_cep" name="p2_cep">
+                </div>
+                <div class="form-field">
+                    <label for="p2_telefone">DDD/TELEFONE:</label>
+                    <input type="text" id="p2_telefone" name="p2_telefone">
+                </div>
+                <div class="form-field md:col-span-2">
+                    <label for="p2_responsavel">NOME RESPONSÁVEL:</label>
+                    <input type="text" id="p2_responsavel" name="p2_responsavel">
+                </div>
+                <div class="form-field">
+                    <label for="p2_cargo_resp">CARGO:</label>
+                    <input type="text" id="p2_cargo_resp" name="p2_cargo_resp">
+                </div>
+                <div class="form-field">
+                    <label for="p2_funcao_resp">FUNÇÃO:</label>
+                    <input type="text" id="p2_funcao_resp" name="p2_funcao_resp">
+                </div>
+                 <div class="form-field">
+                    <label for="p2_matricula_resp">MATRÍCULA:</label>
+                    <input type="text" id="p2_matricula_resp" name="p2_matricula_resp">
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="form-section-title">2. TÍTULO DO PROJETO</h2>
+            <div class="form-field">
+                <textarea id="titulo_projeto" name="titulo_projeto" rows="3" placeholder="Digite o título do projeto"></textarea>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="form-section-title">3. COORDENADOR DO PROJETO</h2>
+            <div class="grid-cols-form md:grid-cols-2">
+                <div class="form-field md:col-span-2">
+                    <label for="coord_nome">NOME COMPLETO:</label>
+                    <input type="text" id="coord_nome" name="coord_nome">
+                </div>
+                <div class="form-field">
+                    <label for="coord_titulacao">TITULAÇÃO:</label>
+                    <input type="text" id="coord_titulacao" name="coord_titulacao">
+                </div>
+                <div class="form-field">
+                    <label for="coord_campus">CAMPUS:</label>
+                    <input type="text" id="coord_campus" name="coord_campus">
+                </div>
+                <div class="form-field">
+                    <label for="coord_cargo">CARGO:</label>
+                    <input type="text" id="coord_cargo" name="coord_cargo">
+                </div>
+                <div class="form-field">
+                    <label for="coord_telefone">TELEFONE:</label>
+                    <input type="tel" id="coord_telefone" name="coord_telefone">
+                </div>
+                <div class="form-field">
+                    <label for="coord_email">E-MAIL:</label>
+                    <input type="email" id="coord_email" name="coord_email">
+                </div>
+                <div class="form-field">
+                    <label for="coord_lattes">LATTES:</label>
+                    <input type="text" id="coord_lattes" name="coord_lattes" placeholder="Link para o currículo Lattes">
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="form-section-title">4. PERÍODO DE VIGÊNCIA PREVISTO</h2>
+            <div class="grid-cols-form sm:grid-cols-3">
+                <div class="form-field">
+                    <label for="vigencia_inicio">INÍCIO:</label>
+                    <input type="date" id="vigencia_inicio" name="vigencia_inicio">
+                </div>
+                <div class="form-field">
+                    <label for="vigencia_termino">TÉRMINO:</label>
+                    <input type="date" id="vigencia_termino" name="vigencia_termino">
+                </div>
+                <div class="form-field">
+                    <label for="vigencia_total_meses">TOTAL DE MESES:</label>
+                    <input type="number" id="vigencia_total_meses" name="vigencia_total_meses" readonly>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="form-section-title">5. DADOS DOS CONTATOS DOS PARCEIROS INTERINSTITUCIONAIS</h2>
+            <div class="mb-4 p-3 border border-gray-200 rounded-md">
+                <p class="font-semibold mb-2 text-sm">Contato Parceiro 1:</p>
+                <div class="grid-cols-form md:grid-cols-2">
+                    <div class="form-field">
+                        <label for="contato1_nome">NOME 1:</label>
+                        <input type="text" id="contato1_nome" name="contato1_nome">
+                    </div>
+                    <div class="form-field">
+                        <label for="contato1_email">E-MAIL:</label>
+                        <input type="email" id="contato1_email" name="contato1_email">
+                    </div>
+                    <div class="form-field">
+                        <label for="contato1_instituicao">INSTITUIÇÃO/SETOR:</label>
+                        <input type="text" id="contato1_instituicao" name="contato1_instituicao">
+                    </div>
+                    <div class="form-field">
+                        <label for="contato1_telefone">TELEFONE:</label>
+                        <input type="tel" id="contato1_telefone" name="contato1_telefone">
+                    </div>
+                </div>
+            </div>
+            <div class="mb-4 p-3 border border-gray-200 rounded-md">
+                <p class="font-semibold mb-2 text-sm">Contato Parceiro 2:</p>
+                <div class="grid-cols-form md:grid-cols-2">
+                    <div class="form-field">
+                        <label for="contato2_nome">NOME 2:</label>
+                        <input type="text" id="contato2_nome" name="contato2_nome">
+                    </div>
+                    <div class="form-field">
+                        <label for="contato2_email">E-MAIL:</label>
+                        <input type="email" id="contato2_email" name="contato2_email">
+                    </div>
+                    <div class="form-field">
+                        <label for="contato2_instituicao">INSTITUIÇÃO/SETOR:</label>
+                        <input type="text" id="contato2_instituicao" name="contato2_instituicao">
+                    </div>
+                    <div class="form-field">
+                        <label for="contato2_telefone">TELEFONE:</label>
+                        <input type="tel" id="contato2_telefone" name="contato2_telefone">
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 border border-gray-200 rounded-md">
+                <p class="font-semibold mb-2 text-sm">Contato Parceiro 3:</p>
+                <div class="grid-cols-form md:grid-cols-2">
+                    <div class="form-field">
+                        <label for="contato3_nome">NOME 3:</label>
+                        <input type="text" id="contato3_nome" name="contato3_nome">
+                    </div>
+                    <div class="form-field">
+                        <label for="contato3_email">E-MAIL:</label>
+                        <input type="email" id="contato3_email" name="contato3_email">
+                    </div>
+                    <div class="form-field">
+                        <label for="contato3_instituicao">INSTITUIÇÃO/SETOR:</label>
+                        <input type="text" id="contato3_instituicao" name="contato3_instituicao">
+                    </div>
+                    <div class="form-field">
+                        <label for="contato3_telefone">TELEFONE:</label>
+                        <input type="tel" id="contato3_telefone" name="contato3_telefone">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="form-section-title">6. ESCOLHA DA FUNDAÇÃO</h2>
+            <div class="form-field">
+                <label for="fundacao_apoio">FUNDAÇÃO DE APOIO:</label>
+                <input type="text" id="fundacao_apoio" name="fundacao_apoio">
+            </div>
+        </section>
+
+        <div class="text-center mt-8">
+            <button id="gerarPdfBtn" class="btn-primary">Gerar PDF</button>
+        </div>
+    </div>
+
+    <script>
+        // Function to calculate total months
+        function calcularTotalMeses() {
+            const inicioInput = document.getElementById('vigencia_inicio');
+            const terminoInput = document.getElementById('vigencia_termino');
+            const totalMesesInput = document.getElementById('vigencia_total_meses');
+
+            const dataInicio = new Date(inicioInput.value);
+            const dataTermino = new Date(terminoInput.value);
+
+            if (inicioInput.value && terminoInput.value && dataTermino >= dataInicio) {
+                let anos = dataTermino.getFullYear() - dataInicio.getFullYear();
+                let meses = dataTermino.getMonth() - dataInicio.getMonth();
+                
+                // Adjustment if the end day is before the start day in the last month
+                // For simplicity, we are counting full months.
+                // If a more precise "commercial month" or "days/30" logic is needed, this can be adjusted.
+                // For now, if start is Jan 15 and end is Feb 14, it's 0 months. If Feb 15, it's 1 month.
+                // A common approach is to add 1 if the end month is after or same as start month,
+                // and the day of month is also greater or equal.
+                
+                let totalMeses = anos * 12 + meses;
+
+                // If the end date is in a later month, or same month but later/same day
+                if (dataTermino.getDate() >= dataInicio.getDate()) {
+                    totalMeses +=1; // Count the start month as one if dates align or end day is later
+                }
+                // If the start date is the first of the month and end date is last of month, it's exactly N months.
+                // Example: 01/01/2024 to 31/01/2024 should be 1 month.
+                // Our current logic: (2024-2024)*12 + (0-0) = 0. If day is >=, +1 -> 1 month. Correct.
+                // Example: 01/01/2024 to 28/02/2024 should be 2 months.
+                // (2024-2024)*12 + (1-0) = 1. If day is >=, +1 -> 2 months. Correct.
+                // Example: 15/01/2024 to 14/02/2024 should be 1 month by some counts, 0 by strict full month.
+                // Current logic: (2024-2024)*12 + (1-0) = 1. If day 14 < 15, no +1. So 1 month.
+                // This seems reasonable for "total de meses de vigência".
+
+                if (totalMeses < 0) totalMeses = 0; // Should not happen if dataTermino >= dataInicio
+
+                totalMesesInput.value = totalMeses;
+
+            } else {
+                totalMesesInput.value = ''; // Clear if dates are invalid or not set
+            }
+        }
+
+        // Add event listeners to date inputs
+        document.getElementById('vigencia_inicio').addEventListener('change', calcularTotalMeses);
+        document.getElementById('vigencia_termino').addEventListener('change', calcularTotalMeses);
+
+        // PDF Generation
+        document.getElementById('gerarPdfBtn').addEventListener('click', function () {
+            const { jsPDF } = window.jspdf;
+            const formElement = document.getElementById('planoTrabalho');
+            
+            // Temporarily make all input values visible for PDF generation
+            const inputs = formElement.querySelectorAll('input, textarea');
+            const originalValues = new Map();
+            inputs.forEach(input => {
+                if (input.type === 'date' && input.value) {
+                    // Format date for better display in PDF if needed
+                    const dateValue = new Date(input.value);
+                    const day = String(dateValue.getDate()).padStart(2, '0');
+                    const month = String(dateValue.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+                    const year = dateValue.getFullYear();
+                    originalValues.set(input, input.value); // Store original value
+                    // Set a placeholder or a text representation for printing if input.value is not directly rendered well
+                    // For html2canvas, it should render the input's visual state.
+                } else if (input.value && input.placeholder && input.value === input.placeholder) {
+                    // If value is same as placeholder, html2canvas might not render it.
+                    // This is usually not an issue for filled forms.
+                }
+            });
+
+
+            html2canvas(formElement, {
+                scale: 2, // Higher scale for better quality
+                useCORS: true, // If you have external images/logos
+                logging: true,
+                onclone: (documentClone) => {
+                    // This function is called when html2canvas clones the document
+                    // You can make temporary changes to the cloned document before rendering
+                    // For example, ensure all input values are displayed as text if they are not by default
+                    const clonedInputs = documentClone.querySelectorAll('input, textarea');
+                    clonedInputs.forEach(clonedInput => {
+                        const originalInput = document.getElementById(clonedInput.id);
+                        if (originalInput) {
+                            if (clonedInput.type === 'date' && originalInput.value) {
+                                // Convert date input to text input to show value clearly
+                                const dateValue = new Date(originalInput.value);
+                                const day = String(dateValue.getUTCDate()).padStart(2, '0');
+                                const month = String(dateValue.getUTCMonth() + 1).padStart(2, '0');
+                                const year = dateValue.getUTCFullYear();
+                                clonedInput.outerHTML = `<span style="font-size: 0.875rem; padding: 0.5rem 0.75rem; border: 1px solid #CBD5E0; display: block; width: 100%; border-radius: 0.25rem;">${day}/${month}/${year}</span>`;
+
+                            } else if (clonedInput.tagName === 'INPUT' || clonedInput.tagName === 'TEXTAREA') {
+                                // For other inputs, ensure their value is visible.
+                                // Create a span to replace the input for printing, showing its value.
+                                // This helps ensure the value is rendered as text.
+                                const valueSpan = document.createElement('span');
+                                valueSpan.textContent = originalInput.value || ''; // Use original value
+                                valueSpan.style.fontSize = '0.875rem';
+                                valueSpan.style.padding = '0.5rem 0.75rem';
+                                valueSpan.style.border = '1px solid #CBD5E0';
+                                valueSpan.style.display = 'block';
+                                valueSpan.style.width = '100%';
+                                valueSpan.style.borderRadius = '0.25rem';
+                                valueSpan.style.minHeight = clonedInput.offsetHeight + 'px'; // Keep similar height
+                                valueSpan.style.whiteSpace = 'pre-wrap'; // For textareas
+                                valueSpan.style.wordBreak = 'break-word';
+
+                                if (clonedInput.id === 'titulo_projeto') { // Special handling for textarea
+                                     valueSpan.innerHTML = originalInput.value.replace(/\n/g, '<br>');
+                                }
+
+                                clonedInput.parentNode.replaceChild(valueSpan, clonedInput);
+                            }
+                        }
+                    });
+                    // Hide the button in the cloned document for PDF
+                    const clonedButton = documentClone.getElementById('gerarPdfBtn');
+                    if (clonedButton) clonedButton.style.display = 'none';
+
+                    const clonedInovatoLogo = documentClone.querySelector('header img:last-child');
+                     if(clonedInovatoLogo) clonedInovatoLogo.style.display = 'none';
+                }
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({
+                    orientation: 'p', // portrait
+                    unit: 'mm', // millimeters
+                    format: 'a4' // A4 size
+                });
+
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const canvasWidth = canvas.width;
+                const canvasHeight = canvas.height;
+                const ratio = canvasWidth / canvasHeight;
+                
+                let imgWidth = pdfWidth - 20; // pdfWidth minus margins (10mm each side)
+                let imgHeight = imgWidth / ratio;
+
+                // Check if image height exceeds page height
+                if (imgHeight > pdfHeight - 20) { // pdfHeight minus margins (10mm each side)
+                    imgHeight = pdfHeight - 20;
+                    imgWidth = imgHeight * ratio;
+                }
+                
+                // Center the image on the page
+                const x = (pdfWidth - imgWidth) / 2;
+                const y = 10; // 10mm margin from top
+
+                pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+                pdf.save('plano_de_trabalho.pdf');
+
+                // Restore original input values if they were changed (though not strictly necessary with onclone)
+                originalValues.forEach((value, input) => {
+                    // If we modified input type or value directly on original element (not in clone)
+                    // input.value = value; 
+                });
+            }).catch(error => {
+                console.error("Erro ao gerar PDF:", error);
+                alert("Ocorreu um erro ao gerar o PDF. Verifique o console para mais detalhes.");
+            });
+        });
+    </script>
+</body>
+</html>
