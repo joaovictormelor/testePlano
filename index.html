@@ -33,12 +33,29 @@
         .form-field {
             margin-bottom: 0.75rem; /* Space below each field */
         }
-        .form-field label {
+        .form-field label, .checkbox-group-label {
             display: block;
             font-weight: 500;
             margin-bottom: 0.25rem;
             font-size: 0.875rem; /* Slightly smaller label text */
             color: #2D3748; /* Dark gray for labels */
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 0.5rem;
+            height: 1rem;
+            width: 1rem;
+            accent-color: #4A5568;
+        }
+        .checkbox-item label {
+            font-weight: normal;
+            font-size: 0.875rem;
+            color: #2D3748;
+            margin-bottom: 0; /* Reset margin for checkbox labels */
         }
         .form-field input[type="text"],
         .form-field input[type="email"],
@@ -152,9 +169,13 @@
             .form-field input[type="tel"],
             .form-field input[type="date"],
             .form-field input[type="number"],
-            .form-field textarea {
+            .form-field textarea,
+            .checkbox-item label { /* Style checkbox labels for print */
                 border: 1px solid #ccc !important; /* Ensure borders are visible */
                 font-size: 9pt;
+            }
+            .checkbox-item input[type="checkbox"] { /* Hide actual checkbox, show state via text */
+                display: none !important;
             }
             .btn-primary, .header-logos img:last-child /* Hide INOVATO logo and button for printing */ {
                 display: none !important;
@@ -172,7 +193,7 @@
                 display: grid !important; /* Override Tailwind's print utilities if needed */
             }
             /* Try to keep elements on the same page */
-            .form-section-title, .form-field {
+            .form-section-title, .form-field, .checkbox-group-label, .checkbox-item {
                 page-break-inside: avoid;
             }
         }
@@ -473,7 +494,58 @@
                 <label for="fundacao_apoio">FUNDAÇÃO DE APOIO:</label>
                 <input type="text" id="fundacao_apoio" name="fundacao_apoio">
             </div>
+            <div class="form-field mt-4">
+                <label class="checkbox-group-label">JUSTIFICATIVA/CRITÉRIO PARA ESCOLHA DA FUNDAÇÃO (marcar mais de um se for o caso):</label>
+                <div class="grid-cols-form md:grid-cols-2 mt-2 gap-x-8">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="just_unica_atender" name="justificativa_fundacao" value="unica_atender">
+                        <label for="just_unica_atender">Única a atender o pedido de apoio realizado</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="just_projeto_captado" name="justificativa_fundacao" value="projeto_captado">
+                        <label for="just_projeto_captado">Projeto proposto ou captado pela Fundação</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="just_experiencia_fap" name="justificativa_fundacao" value="experiencia_fap">
+                        <label for="just_experiencia_fap">Experiência da FAP em apoiar a execução de projetos com características semelhantes</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="just_continuidade_projeto" name="justificativa_fundacao" value="continuidade_projeto">
+                        <label for="just_continuidade_projeto">Continuidade ou novo projeto de características semelhantes a outro já realizado com a FAP</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="just_menor_orcamento" name="justificativa_fundacao" value="menor_orcamento">
+                        <label for="just_menor_orcamento">Menor orçamento apresentado para despesas operacionais e administrativas</label>
+                    </div>
+                    <div class="checkbox-item items-start"> <input type="checkbox" id="just_outro" name="justificativa_fundacao_outro_check" value="outro_check" class="mt-1">
+                        <div class="flex-grow">
+                             <label for="just_outro" class="block">Outro: (fundamentar)</label>
+                             <textarea id="just_outro_texto" name="justificativa_fundacao_outro_texto" rows="2" class="w-full mt-1" placeholder="Fundamente aqui"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
+        
+        <section>
+            <h2 class="form-section-title">7. CIÊNCIA DO COORDENADOR DO PROJETO</h2>
+            <div class="form-field">
+                <p class="text-sm text-gray-600 p-4 border rounded-md bg-gray-50">
+                    Declaro, para os devidos fins, ter ciência das normas e procedimentos que regem a relação entre a Universidade Federal do Tocantins (UFT),
+                    a Fundação de Apoio e o Coordenador do Projeto, comprometendo-me a cumpri-los integralmente.
+                </p>
+                <div class="mt-4">
+                    <label for="ciencia_local_data" class="form-field label">Local e Data:</label>
+                    <input type="text" id="ciencia_local_data" name="ciencia_local_data" placeholder="Ex: Palmas - TO, DD/MM/AAAA">
+                </div>
+                <div class="mt-6 border-t pt-4">
+                     <label for="ciencia_assinatura" class="form-field label">Assinatura do Coordenador do Projeto:</label>
+                    <div class="w-full h-16 border-b border-gray-400 mt-2"></div>
+                    <p class="text-xs text-center text-gray-500 mt-1">(Assinatura)</p>
+                </div>
+            </div>
+        </section>
+
 
         <div class="text-center mt-8">
             <button id="gerarPdfBtn" class="btn-primary">Gerar PDF</button>
@@ -494,155 +566,174 @@
                 let anos = dataTermino.getFullYear() - dataInicio.getFullYear();
                 let meses = dataTermino.getMonth() - dataInicio.getMonth();
                 
-                // Adjustment if the end day is before the start day in the last month
-                // For simplicity, we are counting full months.
-                // If a more precise "commercial month" or "days/30" logic is needed, this can be adjusted.
-                // For now, if start is Jan 15 and end is Feb 14, it's 0 months. If Feb 15, it's 1 month.
-                // A common approach is to add 1 if the end month is after or same as start month,
-                // and the day of month is also greater or equal.
-                
                 let totalMeses = anos * 12 + meses;
 
-                // If the end date is in a later month, or same month but later/same day
                 if (dataTermino.getDate() >= dataInicio.getDate()) {
-                    totalMeses +=1; // Count the start month as one if dates align or end day is later
+                    totalMeses +=1; 
                 }
-                // If the start date is the first of the month and end date is last of month, it's exactly N months.
-                // Example: 01/01/2024 to 31/01/2024 should be 1 month.
-                // Our current logic: (2024-2024)*12 + (0-0) = 0. If day is >=, +1 -> 1 month. Correct.
-                // Example: 01/01/2024 to 28/02/2024 should be 2 months.
-                // (2024-2024)*12 + (1-0) = 1. If day is >=, +1 -> 2 months. Correct.
-                // Example: 15/01/2024 to 14/02/2024 should be 1 month by some counts, 0 by strict full month.
-                // Current logic: (2024-2024)*12 + (1-0) = 1. If day 14 < 15, no +1. So 1 month.
-                // This seems reasonable for "total de meses de vigência".
-
-                if (totalMeses < 0) totalMeses = 0; // Should not happen if dataTermino >= dataInicio
+                
+                if (totalMeses < 0) totalMeses = 0; 
 
                 totalMesesInput.value = totalMeses;
 
             } else {
-                totalMesesInput.value = ''; // Clear if dates are invalid or not set
+                totalMesesInput.value = ''; 
             }
         }
 
-        // Add event listeners to date inputs
         document.getElementById('vigencia_inicio').addEventListener('change', calcularTotalMeses);
         document.getElementById('vigencia_termino').addEventListener('change', calcularTotalMeses);
 
-        // PDF Generation
         document.getElementById('gerarPdfBtn').addEventListener('click', function () {
             const { jsPDF } = window.jspdf;
             const formElement = document.getElementById('planoTrabalho');
             
-            // Temporarily make all input values visible for PDF generation
-            const inputs = formElement.querySelectorAll('input, textarea');
-            const originalValues = new Map();
-            inputs.forEach(input => {
-                if (input.type === 'date' && input.value) {
-                    // Format date for better display in PDF if needed
-                    const dateValue = new Date(input.value);
-                    const day = String(dateValue.getDate()).padStart(2, '0');
-                    const month = String(dateValue.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
-                    const year = dateValue.getFullYear();
-                    originalValues.set(input, input.value); // Store original value
-                    // Set a placeholder or a text representation for printing if input.value is not directly rendered well
-                    // For html2canvas, it should render the input's visual state.
-                } else if (input.value && input.placeholder && input.value === input.placeholder) {
-                    // If value is same as placeholder, html2canvas might not render it.
-                    // This is usually not an issue for filled forms.
-                }
-            });
-
-
             html2canvas(formElement, {
-                scale: 2, // Higher scale for better quality
-                useCORS: true, // If you have external images/logos
+                scale: 2, 
+                useCORS: true,
                 logging: true,
                 onclone: (documentClone) => {
-                    // This function is called when html2canvas clones the document
-                    // You can make temporary changes to the cloned document before rendering
-                    // For example, ensure all input values are displayed as text if they are not by default
-                    const clonedInputs = documentClone.querySelectorAll('input, textarea');
+                    const clonedInputs = documentClone.querySelectorAll('input, textarea, select');
                     clonedInputs.forEach(clonedInput => {
                         const originalInput = document.getElementById(clonedInput.id);
                         if (originalInput) {
                             if (clonedInput.type === 'date' && originalInput.value) {
-                                // Convert date input to text input to show value clearly
                                 const dateValue = new Date(originalInput.value);
                                 const day = String(dateValue.getUTCDate()).padStart(2, '0');
                                 const month = String(dateValue.getUTCMonth() + 1).padStart(2, '0');
                                 const year = dateValue.getUTCFullYear();
-                                clonedInput.outerHTML = `<span style="font-size: 0.875rem; padding: 0.5rem 0.75rem; border: 1px solid #CBD5E0; display: block; width: 100%; border-radius: 0.25rem;">${day}/${month}/${year}</span>`;
-
-                            } else if (clonedInput.tagName === 'INPUT' || clonedInput.tagName === 'TEXTAREA') {
-                                // For other inputs, ensure their value is visible.
-                                // Create a span to replace the input for printing, showing its value.
-                                // This helps ensure the value is rendered as text.
-                                const valueSpan = document.createElement('span');
-                                valueSpan.textContent = originalInput.value || ''; // Use original value
-                                valueSpan.style.fontSize = '0.875rem';
-                                valueSpan.style.padding = '0.5rem 0.75rem';
-                                valueSpan.style.border = '1px solid #CBD5E0';
-                                valueSpan.style.display = 'block';
-                                valueSpan.style.width = '100%';
-                                valueSpan.style.borderRadius = '0.25rem';
-                                valueSpan.style.minHeight = clonedInput.offsetHeight + 'px'; // Keep similar height
-                                valueSpan.style.whiteSpace = 'pre-wrap'; // For textareas
-                                valueSpan.style.wordBreak = 'break-word';
-
-                                if (clonedInput.id === 'titulo_projeto') { // Special handling for textarea
-                                     valueSpan.innerHTML = originalInput.value.replace(/\n/g, '<br>');
+                                clonedInput.outerHTML = `<span class="pdf-value-span">${day}/${month}/${year}</span>`;
+                            } else if (clonedInput.type === 'checkbox') {
+                                const label = documentClone.querySelector(`label[for="${clonedInput.id}"]`);
+                                let labelText = label ? label.textContent : '';
+                                // For "Outro" checkbox, we handle its text area separately
+                                if (clonedInput.id === 'just_outro') {
+                                   labelText = 'Outro: '; // Keep it short, the text area content will follow
                                 }
-
+                                clonedInput.outerHTML = `<span class="pdf-value-span">[${originalInput.checked ? 'X' : ' '}] ${labelText}</span>`;
+                            } else if (clonedInput.id === 'just_outro_texto' && originalInput.value) {
+                                // Special handling for the "Outro" textarea to be displayed clearly
+                                const valueSpan = document.createElement('span');
+                                valueSpan.className = 'pdf-value-span';
+                                valueSpan.style.display = 'block'; // Ensure it takes its own line if needed
+                                valueSpan.style.paddingLeft = '20px'; // Indent to align with "Outro:"
+                                valueSpan.innerHTML = `Fundamentação: ${originalInput.value.replace(/\n/g, '<br>')}`;
+                                clonedInput.parentNode.replaceChild(valueSpan, clonedInput);
+                            } else if (clonedInput.tagName === 'INPUT' || clonedInput.tagName === 'TEXTAREA') {
+                                const valueSpan = document.createElement('span');
+                                valueSpan.className = 'pdf-value-span';
+                                if (clonedInput.tagName === 'TEXTAREA' && originalInput.value) {
+                                     valueSpan.innerHTML = originalInput.value.replace(/\n/g, '<br>');
+                                } else {
+                                     valueSpan.textContent = originalInput.value || '';
+                                }
                                 clonedInput.parentNode.replaceChild(valueSpan, clonedInput);
                             }
                         }
                     });
-                    // Hide the button in the cloned document for PDF
+                    
+                    // Add base styles for pdf-value-span elements in the cloned document
+                    const style = documentClone.createElement('style');
+                    style.innerHTML = `
+                        .pdf-value-span {
+                            font-size: 0.875rem;
+                            padding: 0.5rem 0.75rem;
+                            border: 1px solid #CBD5E0;
+                            display: block;
+                            width: 100%;
+                            border-radius: 0.25rem;
+                            box-sizing: border-box; /* Ensure padding and border are included in width */
+                            min-height: 2.25rem; /* Approximate height of an input field */
+                            line-height: 1.25rem;
+                            white-space: pre-wrap;
+                            word-break: break-word;
+                            background-color: #fff; /* Ensure background is white */
+                        }
+                        /* Specific styling for checkbox representation */
+                        span[class*="pdf-value-span"][id^="just_"] {
+                            border: none; /* Remove border for checkbox lines */
+                            padding: 0.25rem 0;
+                            min-height: auto;
+                        }
+                    `;
+                    documentClone.head.appendChild(style);
+
+
                     const clonedButton = documentClone.getElementById('gerarPdfBtn');
                     if (clonedButton) clonedButton.style.display = 'none';
-
                     const clonedInovatoLogo = documentClone.querySelector('header img:last-child');
-                     if(clonedInovatoLogo) clonedInovatoLogo.style.display = 'none';
+                    if(clonedInovatoLogo) clonedInovatoLogo.style.display = 'none';
                 }
             }).then(canvas => {
                 const imgData = canvas.toDataURL('image/png');
                 const pdf = new jsPDF({
-                    orientation: 'p', // portrait
-                    unit: 'mm', // millimeters
-                    format: 'a4' // A4 size
+                    orientation: 'p', 
+                    unit: 'mm', 
+                    format: 'a4' 
                 });
 
                 const pdfWidth = pdf.internal.pageSize.getWidth();
                 const pdfHeight = pdf.internal.pageSize.getHeight();
+                const margin = 10; // 10mm margin
+                const contentWidth = pdfWidth - (2 * margin);
+                
                 const canvasWidth = canvas.width;
                 const canvasHeight = canvas.height;
                 const ratio = canvasWidth / canvasHeight;
                 
-                let imgWidth = pdfWidth - 20; // pdfWidth minus margins (10mm each side)
+                let imgWidth = contentWidth;
                 let imgHeight = imgWidth / ratio;
+                let currentPosition = margin;
 
-                // Check if image height exceeds page height
-                if (imgHeight > pdfHeight - 20) { // pdfHeight minus margins (10mm each side)
-                    imgHeight = pdfHeight - 20;
-                    imgWidth = imgHeight * ratio;
+                if (imgHeight <= (pdfHeight - (2*margin))) { // If fits on one page
+                    pdf.addImage(imgData, 'PNG', margin, currentPosition, imgWidth, imgHeight);
+                } else { // If content is taller than one page
+                    let remainingCanvasHeight = canvasHeight;
+                    let yCanvas = 0;
+
+                    while (remainingCanvasHeight > 0) {
+                        const pageMaxContentHeight = (pdfHeight - (2 * margin)) * (canvas.width / imgWidth); // Max content height on PDF page in canvas pixels
+                        const pageImageHeightOnCanvas = Math.min(remainingCanvasHeight, pageMaxContentHeight);
+                        
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = canvasWidth;
+                        tempCanvas.height = pageImageHeightOnCanvas;
+                        const tempCtx = tempCanvas.getContext('2d');
+                        tempCtx.drawImage(canvas, 0, yCanvas, canvasWidth, pageImageHeightOnCanvas, 0, 0, canvasWidth, pageImageHeightOnCanvas);
+                        
+                        const pageImgData = tempCanvas.toDataURL('image/png');
+                        const pageImgDisplayHeight = (pageImageHeightOnCanvas / canvasWidth) * imgWidth;
+
+                        pdf.addImage(pageImgData, 'PNG', margin, currentPosition, imgWidth, pageImgDisplayHeight);
+                        
+                        remainingCanvasHeight -= pageImageHeightOnCanvas;
+                        yCanvas += pageImageHeightOnCanvas;
+
+                        if (remainingCanvasHeight > 0) {
+                            pdf.addPage();
+                            currentPosition = margin; // Reset position for new page
+                        }
+                    }
                 }
-                
-                // Center the image on the page
-                const x = (pdfWidth - imgWidth) / 2;
-                const y = 10; // 10mm margin from top
-
-                pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
                 pdf.save('plano_de_trabalho.pdf');
-
-                // Restore original input values if they were changed (though not strictly necessary with onclone)
-                originalValues.forEach((value, input) => {
-                    // If we modified input type or value directly on original element (not in clone)
-                    // input.value = value; 
-                });
             }).catch(error => {
                 console.error("Erro ao gerar PDF:", error);
-                alert("Ocorreu um erro ao gerar o PDF. Verifique o console para mais detalhes.");
+                // Avoid using alert()
+                const errorDiv = document.createElement('div');
+                errorDiv.style.position = 'fixed';
+                errorDiv.style.top = '10px';
+                errorDiv.style.left = '50%';
+                errorDiv.style.transform = 'translateX(-50%)';
+                errorDiv.style.backgroundColor = 'red';
+                errorDiv.style.color = 'white';
+                errorDiv.style.padding = '10px';
+                errorDiv.style.borderRadius = '5px';
+                errorDiv.style.zIndex = '1000';
+                errorDiv.textContent = "Erro ao gerar PDF: " + error.message;
+                document.body.appendChild(errorDiv);
+                setTimeout(() => {
+                    document.body.removeChild(errorDiv);
+                }, 5000);
             });
         });
     </script>
